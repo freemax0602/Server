@@ -1,7 +1,7 @@
-﻿#include <iostream>//для использования стандарных операторов типо cout
-#include <conio.h>      //для использования getch()
-#pragma comment(lib, "ws2_32")//включаем библиотеку для сокетов
-#include <winsock2.h> //подключаем библеотеку винсокета
+﻿#include <iostream>
+#include <conio.h>    
+#pragma comment(lib, "ws2_32")
+#include <winsock2.h> 
 #include <Windows.h> 
 #include <Shellapi.h>
 #include <cstdio>
@@ -9,18 +9,14 @@
 
 #pragma warning(disable:4996)
 
-using namespace std;//прямой доступ к операторам типо std::cout<<endl;
-
-//глобальные переменные
-
-//------------
+using namespace std;
 
 int main(void)
 {
 	system("chcp 1251 > text");//ставим подержку русской кодировки
-//--------------
+
 	std::cout << "    С Е Р В Е Р  >>>" << endl << endl;
-	while (1) // постоянная работа сервера
+	while (1) // Для постоянной работы сервера
 	{
 		int i_error = 0;//будет хранить код ошибки
 
@@ -28,8 +24,9 @@ int main(void)
 		0. настройка библиотеки Ws2_32.dll*/
 		//В случае успеха WSAStartup возвращает 0; иначе - код ошибки. 
 		WSADATA wsaData;//определяем переменную
-		i_error = WSAStartup(MAKEWORD(2, 2), &wsaData);//настраиваем
-		if (i_error)//проверка на успешность настройки
+		i_error = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+		if (i_error)
 		{
 
 		std::cout << "   ОШИБКА! " << WSAGetLastError() << "; 2й метод: " << i_error << endl;
@@ -43,12 +40,12 @@ int main(void)
 		/********************************************
 		1. создание серверного сокета*/
 		//В случае успеха socket возвращает номер сокет-дескриптора. иначе -1
-		SOCKET SSock;//создаем прототип
+		SOCKET SSock;// Создаем сокета
 		SSock = socket(
 			AF_INET,//используется при создании Интернет-приложений
 			SOCK_STREAM,//потоковый
-			IPPROTO_TCP//ТСР - для потоковых
-		);
+			IPPROTO_TCP);//ТСР - для потоковых
+	   
 		if (SSock == -1)
 		{
 			std::cout << "   ОШИБКА! - сокет не создан!" << endl;
@@ -59,20 +56,17 @@ int main(void)
 		}
 
 		/********************************************
-		2. Привязка к локальным именам*/
-		//необходимо сокет связать с IP-адресом компьютера.
-		struct sockaddr_in  dest_addr;//создаем протатип(dest_addr), структуры sockaddr_in
+		Привязка к локальным именам*/
+		struct sockaddr_in  dest_addr;
 		dest_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-		dest_addr.sin_port = htons(3000); //порт
-		dest_addr.sin_family = AF_INET;//при создании Интернет-приложений
-		//INADDR_ANY сервер работает НА машине, с любым ip
-		/*если мы захотим фактически задать IP-адрес
-		Мы должны использовать функцию inet_addr(). inet_addr ("129.42.12.241")*/
-		i_error = 0;//очистка переменной для ошибок
-		i_error = bind( //В случае успеха bind возвращает 0, в противном случае - "-1"
+		dest_addr.sin_port = htons(3000); 
+		dest_addr.sin_family = AF_INET;
+		i_error = 0;
+		//В случае успеха bind возвращает 0, в противном случае - "-1"
+		i_error = bind( 
 				SSock,
-				(SOCKADDR*)&dest_addr,//addr - указатель на структуру sockaddr_in
-				sizeof(dest_addr) //размер структуры.
+				(SOCKADDR*)&dest_addr,
+				sizeof(dest_addr)
 			          );
 		if (i_error == -1) 
 		{
@@ -93,35 +87,27 @@ int main(void)
 		);
 	
 		/********************************************
-		4. подключение клиента - Получение дескриптора клиентского соединения*/
-		//сервер создает новый сокет и связывает его с ассоциацией, 
-		//эквивалентной 'слушающему сокету'
+		4.Подключение клиента - Получение дескриптора клиентского соединения*/
 		cout << "   Ожидание клиента\n";
-		SOCKET ClientSock;//создаем прототип сокета для подключающегося клиента
-		struct sockaddr_in addr_klienta;//создаем прототип структуры для подключающегося клиента
-		//Если функция accept выполнилась успешно - возвращает новый сокет 
-		//для установленного соединения, в противном случае  INVALID_SOCKET
-		int size_client_addr = sizeof(addr_klienta);//размер структуры для клиента
+		SOCKET ClientSock;
+		struct sockaddr_in addr_klienta;
+		/*Если функция accept выполнилась успешно - возвращает новый сокет 
+		для установленного соединения, в противном случае  INVALID_SOCKET*/
+		int size_client_addr = sizeof(addr_klienta);
 		ClientSock = accept(
 			SSock,
 			(sockaddr*)&addr_klienta, //адрес структуры (!)sockaddr_in 
 			//куда будет помещена информация о клиенте.
-			&size_client_addr // Длинна адреса
-			               );
-		/*
-			Метод Socket.Accept извлекает из очереди первый запрос и
-			возвращает новый объект Socket,
-			который можно использовать для коммуникационного взаимодействия с клиентом.
-		*/
-		/*
-			accept в addr будет возвращена информация о клиенте.
-			Нам будет важна только:
-			addr.sin_port – порт с которого было подключение
-			addr.sin_addr – ip клиента в двоичном формате. ;
-		*/
+			&size_client_addr); // Длинна адреса
 
-		if (ClientSock == INVALID_SOCKET) std::cout << "   ОШИБКА! подключения клиента" << endl;
-		else std::cout << "   Клиент успешно подключен" << endl;
+		if (ClientSock == INVALID_SOCKET)
+		{
+			std::cout << "   ОШИБКА! подключения клиента" << endl;
+		}
+		else
+		{
+			std::cout << "   Клиент успешно подключен" << endl;
+		}
 
 		while (1) // Для поддержки нескольких команд
 		{
@@ -129,54 +115,104 @@ int main(void)
 			Передача-чтение данных*/
 			//чтение
 			char Messege_Server[1024];
-			if (recv(//чтение
-				ClientSock,//сокет
-				Messege_Server,//буфер куда поподут данные
-				1024,//размер буфера чтения - сколько считать
-				0//делаем ее аналогичной как функция read
-				) > 0)
+			if (recv(
+				ClientSock,
+				Messege_Server,
+				1024,
+				0) > 0)
 			{
 					std::cout << "   Получене команда: " << Messege_Server << endl;
 
-					/*********************************************
-					Обработка команд клиента*/
+				/*********************************************
+				Обработка команд клиента*/
 				switch (Messege_Server[0])
 				{
 					/*********************************************
 					Открытие тотал командера*/
 					case 'O':
 					{
-						STARTUPINFO si = { sizeof(STARTUPINFO) };
+						
+						if (!ShellExecute(0, L"Open", L"C:\\totalcmd\\TOTALCMD64.EXE", NULL, NULL, SW_RESTORE)) 
+						{
+							char Msg_to_Client[1024] = "\nОшибка,нельзя открыть total commander";
+							send(
+								ClientSock,
+								Msg_to_Client,
+								sizeof(Msg_to_Client),
+								0);
+							
+							cout << "   По запросу клиента, нельзя открыть total commander";
+						}
+						else 
+						{
 
-						si.cb = sizeof(si);
-						si.dwFlags = STARTF_USESHOWWINDOW;
-						si.wShowWindow = SW_HIDE;
-						PROCESS_INFORMATION pi;
+							char Msg_to_Client[1024] = "\nToal commander открыт";
+							send(
+								ClientSock,
+								Msg_to_Client,
+								sizeof(Msg_to_Client),
+								0);
+							
+							cout << "   По запросу клиента,открыт total commander";
 
-						CreateProcess(L"C:\\totalcmd\\TOTALCMD64.EXE", NULL, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+						}
+
+						break;
 					}
+
 					/*********************************************
 					Закрытие тотал командера*/
 					case 'C':
 					{
 
-							break;
-						}
+						break;
+					}
+
 					/*********************************************
 					просмотр системеного времени*/
 					case 'T':
 					{
 
-							break;
-						}
+						break;
+					}
+
 					/*********************************************
 					изменение системного времени*/
 					case 'M':
 					{
+						SYSTEMTIME new_time;
 
+						GetLocalTime(&new_time);
 
-							break;
+						new_time.wHour = 15;
+						new_time.wMinute = 05;
+
+						if (SetSystemTime(&new_time) != 0)
+						{
+							char Msg_to_Client[1024] = "\nСистемное время изменено";
+							send(
+								ClientSock,
+								Msg_to_Client,
+								sizeof(Msg_to_Client),
+								0);
+
+							cout << "   По запросу клиента, изменено системное время";
 						}
+						else
+						{
+
+							char Msg_to_Client[1024] = "\nОшибка,нет прав администратора";
+							send(
+								ClientSock,
+								Msg_to_Client,
+								sizeof(Msg_to_Client),
+								0);
+
+							cout << "   Ошибка,нет прав администратора";
+
+						}
+					}
+
 					/*********************************************
 					Обработка команд клиента*/
 					case 'h':
@@ -186,16 +222,15 @@ int main(void)
 							send(
 								ClientSock,
 								Messege_To_Opened,
-								sizeof(Messege_To_Opened),
-								0
-							);
-
+								sizeof(Messege_To_Opened),0);
+							
 							cout << "   клиенту дано описание команд\n";
 
 							break;
 						}
-						/*********************************************
-						Отсутсвие команд*/
+
+					/*********************************************
+					Отсутсвие команд*/
 					default:
 					{
 						char Messege_To_Error[1024] = "   Команда не найдена";
@@ -204,17 +239,16 @@ int main(void)
 						ClientSock,
 						Messege_To_Error,
 						sizeof(Messege_To_Error),
-						0
-						);
-						break; //выход из кейса
+						0);
+						break; 
 					}
 				}
 			}
-			    else
-				{
+			else
+			{
 					cout << "\n   Клиент отключился" << endl;
 					break;
-				}
+			}
 		}
 		/********************************************
 		Закрытие сокета*/
